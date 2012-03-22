@@ -48,6 +48,11 @@ default_config = {
         'client_id': None,
         'client_secret': None,
         },
+    'provider.foursquare': {
+        'class_path': 'engineauth.strategies.foursquare.FoursquareStrategy',
+        'client_id': None,
+        'client_secret': None,
+        },
     }
 
 def load_config(cust_config=None):

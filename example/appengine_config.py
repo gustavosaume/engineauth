@@ -33,15 +33,22 @@ engineauth['provider.twitter'] = {
     'client_secret': 'LCQweRuuGndhtNWihnwiDxs9npkNRII8GAgpGkYFi5c',
     }
 
-
 if ON_DEV:
     # Facebook settings for Development
     FACEBOOK_APP_KEY = '343417275669983'
     FACEBOOK_APP_SECRET = 'fec59504f33b238a5d7b5f3b35bd958a'
+    
+    # Foursquare settings for Development
+    FOURSQUARE_APP_KEY = 'BQTAUDISMGKGCIMPRONJ314BYQG5U5IHRGX2PG5KTVRDOX13'
+    FOURSQUARE_APP_SECRET = 'Z21GX3URPQQEGXESI1TYNLYFZRMDLCM5KYUFQBHMHO13E2D0'
 else:
     # Facebook settings for Production
     FACEBOOK_APP_KEY = '109551039166233'
     FACEBOOK_APP_SECRET = 'f929abbc0c5092164df693d047f880ec'
+
+    # Foursquare settings for Production
+    FOURSQUARE_APP_KEY = 'BQTAUDISMGKGCIMPRONJ314BYQG5U5IHRGX2PG5KTVRDOX13'
+    FOURSQUARE_APP_SECRET = 'Z21GX3URPQQEGXESI1TYNLYFZRMDLCM5KYUFQBHMHO13E2D0'
 
 engineauth['provider.facebook'] = {
     'client_id': FACEBOOK_APP_KEY,
@@ -49,7 +56,11 @@ engineauth['provider.facebook'] = {
     'scope': 'email',
     }
 
-
+engineauth['provider.foursquare'] = {
+    'client_id': FOURSQUARE_APP_KEY,
+    'client_secret': FOURSQUARE_APP_SECRET,
+    }
+    
 def webapp_add_wsgi_middleware(app):
     from engineauth import middleware
     return middleware.AuthMiddleware(app)
