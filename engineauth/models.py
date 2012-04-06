@@ -396,7 +396,9 @@ class User(ndb.Expando):
         assert isinstance(profile, UserProfile), \
             'You must pass an instance of type engineauth.models.UserProfile.'
         emails = profile.user_info.get('info').get('emails') or []
-        return cls._get_or_create(profile.key.id(), emails)
+        email = profile.user_info.get('info').get('email') or None
+        
+        return cls._get_or_create(profile.key.id(), emails, email=email)
 
 
     def add_profile(self, profile):
