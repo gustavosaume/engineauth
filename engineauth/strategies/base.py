@@ -35,7 +35,7 @@ class BaseStrategy(object):
         except Exception, e:
             req.add_message(e.message, level='error')
             redirect_uri = self.config['login_uri']
-        resp = webob.exc.HTTPTemporaryRedirect(location=redirect_uri)
+        resp = webob.exc.HTTPSeeOther(location=redirect_uri)
 
         resp.request = req
         return resp(environ, start_response)
