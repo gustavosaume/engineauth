@@ -7,6 +7,7 @@ except ImportError:
 default_config = {
     'base_uri': '/auth',
     'login_uri': '/login',
+    'logout_uri':'/logout',
     'success_uri': '/',
     'secret_key': 'CHANGE_TO_A_SECRET_KEY', # We add this here for testing only
     'user_model': 'engineauth.models.User',
@@ -40,6 +41,11 @@ default_config = {
         },
     'provider.password': {
         'class_path': 'engineauth.strategies.password.PasswordStrategy',
+        'required': ['email'],
+        'uid': 'email',
+        },
+    'provider.email': {
+        'class_path': 'engineauth.strategies.email.EmailStrategy',
         'required': ['email'],
         'uid': 'email',
         },
