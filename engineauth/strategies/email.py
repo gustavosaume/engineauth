@@ -17,6 +17,7 @@ from engineauth.strategies.base import BaseStrategy
 import webapp2
 from webapp2_extras import security
 import uuid
+import datetime, time
 
 __author__ = 'gustavosaume@gmail.com (Gustavo Saume)'
 
@@ -61,9 +62,11 @@ class EmailStrategy(BaseStrategy):
         return profile
 
     def callback(self, req):
-        confirmation_key = req.GET['confirmation_key']
+        token = req.GET['token']
         email = req.GET['email']
-        if not confirmation_key or not email:
+        timestamp = req.GET['ts']
+        
+        if not token or not email:
             self.raise_error('Invalid confirmation link, please validate.')
         
         auth_id = models.User.generate_auth_id(req.provider, email)
@@ -74,12 +77,18 @@ class EmailStrategy(BaseStrategy):
                                     'doesn\'t match our records. '
                                     'Please try again.')
         
-        if profile.confirmation_key != confirmation_key:
+        if not security.check_password_hash(profile.password+timestamp, token):
             return self.raise_error('The information that you\'ve provided '
                                     'doesn\'t match our records. '
                                     'Please try again.')
                                     
-        profile.status = 'validated'
+        delta_time = datetime.date.fromtimestamp(float(timestamp)) - datetime.date.today()
+        if delta_time.days >= 1:
+            return self.raise_error('Expired validation link. '
+                                    'Please try again.')
+            
+                                    
+        profile.verified = True
         profile.put()
         
         req.load_user_by_profile(profile)
@@ -96,17 +105,19 @@ class EmailStrategy(BaseStrategy):
                                     'and a password.')
                                     
         user_info = self.user_info(req)
-        confirmation_key = str(uuid.uuid4())
         profile = self.get_or_create_profile(
             auth_id=user_info['auth_id'],
             user_info=user_info,
             password=password,
-            status='unconfirmed',
-            confirmation_key=confirmation_key)
+            verified=False)
         
-        if profile.status == 'unconfirmed':
-            self.callback_uri = '{0}{1}/{2}/callback?email={3}&confirmation_key={4}'.format(req.host_url,
-                self.config['base_uri'], req.provider, email, confirmation_key)
+        # generate and save reset_token
+        timestamp = str(time.time())
+        token_value = security.generate_password_hash(profile.password+timestamp, length=12)
+        
+        if not profile.verified:
+            self.callback_uri = '{0}{1}/{2}/callback?email={3}&ts={4}&token={5}'.format(req.host_url,
+                self.config['base_uri'], req.provider, email, timestamp, token_value)
             
             # send confirmation email
             from google.appengine.api import mail
@@ -126,17 +137,10 @@ class EmailStrategy(BaseStrategy):
             """%dict(email=email, callback=self.callback_uri))
             
             # show user validation process info
-            return '/email-validation'
-
-        # the user has been validated and the password is OK
-        req.load_user_by_profile(profile)
-        
-        
-        
-        import logging
-        logging.info("REQUEST: "+str(req))
-        
-        
+            req.add_message('Check your email')
+        else:
+            # the user has been validated and the password is OK
+            req.load_user_by_profile(profile)
         return req.get_redirect_uri()
 
     def handle_request(self, req):
